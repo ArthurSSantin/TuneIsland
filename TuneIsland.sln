@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{89FA4373-9CFE-4B33-97F2-ACE42AEB27ED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TuneIsland", "src\TuneIsland\TuneIsland.csproj", "{20C2914B-D835-4DF3-8C1B-72572B5CDAED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TuneIsland.Tests", "src\TuneIsland.Tests\TuneIsland.Tests.csproj", "{EC645962-367A-4D4A-8055-C40B72D932C7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{20C2914B-D835-4DF3-8C1B-72572B5CDAED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20C2914B-D835-4DF3-8C1B-72572B5CDAED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20C2914B-D835-4DF3-8C1B-72572B5CDAED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20C2914B-D835-4DF3-8C1B-72572B5CDAED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC645962-367A-4D4A-8055-C40B72D932C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC645962-367A-4D4A-8055-C40B72D932C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC645962-367A-4D4A-8055-C40B72D932C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC645962-367A-4D4A-8055-C40B72D932C7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{20C2914B-D835-4DF3-8C1B-72572B5CDAED} = {89FA4373-9CFE-4B33-97F2-ACE42AEB27ED}
+		{EC645962-367A-4D4A-8055-C40B72D932C7} = {89FA4373-9CFE-4B33-97F2-ACE42AEB27ED}
+	EndGlobalSection
+EndGlobal
