@@ -231,10 +231,22 @@ public partial class IslandWindow : Window
             _autoExpandTimer.Stop();
             _progressTimer.Stop();
             SetEqualizer(false);
-            Collapse();
+            ShowIdleContent();
+
+            // Se o mouse continua em cima, a janela fica aberta mostrando "Nada tocando".
+            if (!_hovered)
+            {
+                Collapse();
+            }
+
             LayoutTo(animate: true, ease: _collapseEase, milliseconds: 260);
             UpdateVisibility();
             return;
+        }
+
+        if (_expanded && !_progressTimer.IsEnabled)
+        {
+            _progressTimer.Start();
         }
 
         if (snapshot.TrackKey != _trackKey)
@@ -257,6 +269,18 @@ public partial class IslandWindow : Window
 
         Dispatcher.BeginInvoke(new Action(RefreshMarquee), DispatcherPriority.Loaded);
         UpdateVisibility();
+    }
+
+    private void ShowIdleContent()
+    {
+        TitleText.Text = "Nada tocando";
+        ArtistText.Text = string.Empty;
+        PlayPauseButton.Content = "";
+        CompactArt.Source = null;
+        LargeArt.Source = null;
+        SetAccent(DominantColorExtractor.Fallback);
+        UpdateProgress();
+        Dispatcher.BeginInvoke(new Action(RefreshMarquee), DispatcherPriority.Loaded);
     }
 
     private void ApplyArtwork(byte[]? thumbnail)
@@ -349,12 +373,17 @@ public partial class IslandWindow : Window
 
     private void Expand()
     {
-        if (_expanded || _snapshot is null)
+        if (_expanded)
         {
             return;
         }
 
         _expanded = true;
+        if (_snapshot is null)
+        {
+            ShowIdleContent();
+        }
+
         ExpandedPanel.Visibility = Visibility.Visible;
         AnimateOpacity(CompactPanel, 0, 120);
         AnimateOpacity(ExpandedPanel, 1, 240);
