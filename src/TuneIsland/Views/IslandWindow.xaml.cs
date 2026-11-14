@@ -14,12 +14,11 @@ namespace TuneIsland.Views;
 
 public partial class IslandWindow : Window
 {
-    private const int CompactHeight = 30;
-    private const int CompactWidth = 150;
-    private const int IdleWidth = 96;
+    private const int CompactHeight = 21;
+    private const int CompactWidth = 105;
+    private const int IdleWidth = 67;
     private const int ExpandedHeight = 150;
-    private const double CompactRadius = CompactHeight / 2.0;
-    private const double ExpandedRadius = 26;
+    private const double MaxCornerRadius = 26;
     private const double FloatingMargin = 10;
 
     private readonly MediaSessionService _media;
@@ -35,7 +34,7 @@ public partial class IslandWindow : Window
     private readonly DispatcherTimer _fullscreenTimer;
 
     private readonly IEasingFunction _expandEase = new QuinticEase { EasingMode = EasingMode.EaseOut };
-    private readonly IEasingFunction _collapseEase = new CubicEase { EasingMode = EasingMode.EaseInOut };
+    private readonly IEasingFunction _collapseEase = new QuarticEase { EasingMode = EasingMode.EaseInOut };
 
     private AppSettings _settings;
     private MediaSnapshot? _snapshot;
@@ -106,6 +105,7 @@ public partial class IslandWindow : Window
             Dispatcher.BeginInvoke(new Action(() => OnSnapshot(snapshot)));
 
         SourceInitialized += (_, _) => ApplyWindowStyles();
+        SizeChanged += (_, _) => ApplyCorners();
         Loaded += (_, _) =>
         {
             ApplyCorners();
@@ -164,9 +164,11 @@ public partial class IslandWindow : Window
         }
     }
 
+    /// <summary>Raio acompanha a altura atual (metade da altura, até um máximo), então muda suavemente durante a animação.</summary>
     private void ApplyCorners()
     {
-        var radius = _expanded ? ExpandedRadius : CompactRadius;
+        var height = ActualHeight > 0 ? ActualHeight : Height;
+        var radius = Math.Min(height / 2.0, MaxCornerRadius);
         Island.CornerRadius = _settings.Style == IslandStyle.Attached
             ? new CornerRadius(0, 0, radius, radius)
             : new CornerRadius(radius);
@@ -229,7 +231,7 @@ public partial class IslandWindow : Window
             _progressTimer.Stop();
             SetEqualizer(false);
             Collapse();
-            LayoutTo(animate: true, ease: _collapseEase, milliseconds: 240);
+            LayoutTo(animate: true, ease: _collapseEase, milliseconds: 260);
             UpdateVisibility();
             return;
         }
@@ -249,7 +251,7 @@ public partial class IslandWindow : Window
 
         if (!_expanded)
         {
-            LayoutTo(animate: true, ease: _collapseEase, milliseconds: 240);
+            LayoutTo(animate: true, ease: _collapseEase, milliseconds: 260);
         }
 
         Dispatcher.BeginInvoke(new Action(RefreshMarquee), DispatcherPriority.Loaded);
@@ -356,7 +358,7 @@ public partial class IslandWindow : Window
         AnimateOpacity(CompactPanel, 0, 120);
         AnimateOpacity(ExpandedPanel, 1, 240);
         ApplyCorners();
-        LayoutTo(animate: true, ease: _expandEase, milliseconds: 340);
+        LayoutTo(animate: true, ease: _expandEase, milliseconds: 360);
         _progressTimer.Start();
         UpdateProgress();
         Dispatcher.BeginInvoke(new Action(RefreshMarquee), DispatcherPriority.Loaded);
@@ -382,7 +384,7 @@ public partial class IslandWindow : Window
         });
         AnimateOpacity(CompactPanel, 1, 220);
         ApplyCorners();
-        LayoutTo(animate: true, ease: _collapseEase, milliseconds: 240);
+        LayoutTo(animate: true, ease: _collapseEase, milliseconds: 260);
     }
 
     private void LayoutTo(bool animate, IEasingFunction? ease = null, int milliseconds = 300)
