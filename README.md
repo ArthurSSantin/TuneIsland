@@ -51,7 +51,7 @@ As configurações ficam em `%AppData%\TuneIsland\settings.json` e também podem
 | `Width` | `380` | Largura expandida, de 240 a 800 px |
 | `AutoExpandSeconds` | `3` | Tempo da auto-expansão ao trocar de faixa, de 1 a 10 s |
 | `StartWithWindows` | `false` | Inicia com o Windows (chave `HKCU\...\Run`) |
-| `HideWhenIdle` | `true` | Esconde quando nada estiver tocando |
+| `HideWhenIdle` | `false` | Esconde quando nada estiver tocando (se `false`, mostra a ilha ociosa) |
 | `HideInFullscreen` | `true` | Esconde quando um app está em tela cheia |
 
 Logs: `%AppData%\TuneIsland\logs\tuneisland.log`.

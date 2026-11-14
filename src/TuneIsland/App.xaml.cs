@@ -54,7 +54,6 @@ public partial class App : Application
             _media?.Dispose();
             _tray?.Dispose();
             _island?.Close();
-            _singleInstance?.ReleaseMutex();
             _singleInstance?.Dispose();
         }
         catch (Exception ex)

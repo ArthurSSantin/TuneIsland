@@ -145,7 +145,7 @@ public class SettingsStoreTests
 
         Assert.Equal(IslandStyle.Attached, settings.Style);
         Assert.Equal(380, settings.Width);
-        Assert.True(settings.HideWhenIdle);
+        Assert.False(settings.HideWhenIdle);
     }
 }
 

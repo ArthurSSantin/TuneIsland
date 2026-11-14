@@ -26,7 +26,7 @@ public sealed class AppSettings
 
     public bool StartWithWindows { get; set; }
 
-    public bool HideWhenIdle { get; set; } = true;
+    public bool HideWhenIdle { get; set; } = false;
 
     public bool HideInFullscreen { get; set; } = true;
 
