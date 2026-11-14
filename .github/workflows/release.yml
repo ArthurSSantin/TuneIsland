@@ -30,14 +30,18 @@ jobs:
         run: |
           dotnet publish src/TuneIsland/TuneIsland.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o publish
 
-      - name: Zip and checksum
+      - name: Zip
         shell: pwsh
         run: |
-          $tag = "${{ github.ref_name }}"
-          $zip = "TuneIsland-$tag-win-x64.zip"
+          $zip = "TuneIsland-${{ github.ref_name }}-win-x64.zip"
           Compress-Archive -Path "publish/*" -DestinationPath $zip
-          $hash = (Get-FileHash -Algorithm SHA256 $zip).Hash.ToLower()
-          "$hash  $zip" | Set-Content -Encoding ascii "SHA256SUMS-$tag.txt"
+
+      - name: Checksum (SHA-256)
+        shell: bash
+        run: |
+          tag="${{ github.ref_name }}"
+          sha256sum "TuneIsland-$tag-win-x64.zip" > "SHA256SUMS-$tag.txt"
+          cat "SHA256SUMS-$tag.txt"
 
       - name: Create or update GitHub Release
         shell: bash
