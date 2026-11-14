@@ -14,9 +14,9 @@ namespace TuneIsland.Views;
 
 public partial class IslandWindow : Window
 {
-    private const int CompactHeight = 36;
-    private const int CompactWidth = 190;
-    private const int IdleWidth = 110;
+    private const int CompactHeight = 30;
+    private const int CompactWidth = 150;
+    private const int IdleWidth = 96;
     private const int ExpandedHeight = 150;
     private const double CompactRadius = CompactHeight / 2.0;
     private const double ExpandedRadius = 26;
@@ -34,7 +34,7 @@ public partial class IslandWindow : Window
     private readonly DispatcherTimer _progressTimer;
     private readonly DispatcherTimer _fullscreenTimer;
 
-    private readonly IEasingFunction _expandEase = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = 0.25 };
+    private readonly IEasingFunction _expandEase = new QuinticEase { EasingMode = EasingMode.EaseOut };
     private readonly IEasingFunction _collapseEase = new CubicEase { EasingMode = EasingMode.EaseInOut };
 
     private AppSettings _settings;
@@ -229,7 +229,7 @@ public partial class IslandWindow : Window
             _progressTimer.Stop();
             SetEqualizer(false);
             Collapse();
-            LayoutTo(animate: true, ease: _collapseEase, milliseconds: 260);
+            LayoutTo(animate: true, ease: _collapseEase, milliseconds: 240);
             UpdateVisibility();
             return;
         }
@@ -249,7 +249,7 @@ public partial class IslandWindow : Window
 
         if (!_expanded)
         {
-            LayoutTo(animate: true, ease: _collapseEase, milliseconds: 260);
+            LayoutTo(animate: true, ease: _collapseEase, milliseconds: 240);
         }
 
         Dispatcher.BeginInvoke(new Action(RefreshMarquee), DispatcherPriority.Loaded);
@@ -356,7 +356,7 @@ public partial class IslandWindow : Window
         AnimateOpacity(CompactPanel, 0, 120);
         AnimateOpacity(ExpandedPanel, 1, 240);
         ApplyCorners();
-        LayoutTo(animate: true, ease: _expandEase, milliseconds: 420);
+        LayoutTo(animate: true, ease: _expandEase, milliseconds: 340);
         _progressTimer.Start();
         UpdateProgress();
         Dispatcher.BeginInvoke(new Action(RefreshMarquee), DispatcherPriority.Loaded);
@@ -382,7 +382,7 @@ public partial class IslandWindow : Window
         });
         AnimateOpacity(CompactPanel, 1, 220);
         ApplyCorners();
-        LayoutTo(animate: true, ease: _collapseEase, milliseconds: 280);
+        LayoutTo(animate: true, ease: _collapseEase, milliseconds: 240);
     }
 
     private void LayoutTo(bool animate, IEasingFunction? ease = null, int milliseconds = 300)
