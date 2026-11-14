@@ -16,12 +16,12 @@
     <Window.Resources>
         <Style x:Key="ControlButton" TargetType="Button">
             <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
-            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Width" Value="40"/>
-            <Setter Property="Height" Value="28"/>
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="24"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -82,29 +82,29 @@
             </Grid>
 
             <!-- Estado expandido: capa grande, texto, progresso e controles -->
-            <Grid x:Name="ExpandedPanel" Margin="14,12,14,10" Opacity="0" Visibility="Collapsed">
+            <Grid x:Name="ExpandedPanel" Margin="10,8,10,6" Opacity="0" Visibility="Collapsed">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="92"/>
+                    <ColumnDefinition Width="64"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Border Width="92" Height="92" VerticalAlignment="Top" CornerRadius="14"
+                <Border Width="64" Height="64" VerticalAlignment="Top" CornerRadius="10"
                         ClipToBounds="True" Background="#1F1F1F">
                     <Image x:Name="LargeArt" Stretch="UniformToFill"/>
                 </Border>
 
-                <Grid Grid.Column="1" Margin="14,0,0,0">
+                <Grid Grid.Column="1" Margin="10,0,0,0">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="24"/>
                         <RowDefinition Height="18"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="12"/>
                         <RowDefinition Height="14"/>
-                        <RowDefinition Height="30"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="12"/>
+                        <RowDefinition Height="26"/>
                     </Grid.RowDefinitions>
 
                     <Border x:Name="TitleClip" Grid.Row="0" ClipToBounds="True" VerticalAlignment="Center">
-                        <TextBlock x:Name="TitleText" FontSize="15" FontWeight="SemiBold"
+                        <TextBlock x:Name="TitleText" FontSize="13" FontWeight="SemiBold"
                                    HorizontalAlignment="Left" TextWrapping="NoWrap">
                             <TextBlock.RenderTransform>
                                 <TranslateTransform x:Name="TitleShift"/>
@@ -112,22 +112,22 @@
                         </TextBlock>
                     </Border>
 
-                    <TextBlock x:Name="ArtistText" Grid.Row="1" FontSize="12" Foreground="#B3FFFFFF"
+                    <TextBlock x:Name="ArtistText" Grid.Row="1" FontSize="11" Foreground="#B3FFFFFF"
                                TextTrimming="CharacterEllipsis"/>
 
                     <Grid x:Name="ProgressHit" Grid.Row="3" Background="Transparent" Cursor="Hand"
                           MouseLeftButtonDown="Progress_MouseLeftButtonDown"
                           SizeChanged="ProgressHit_SizeChanged"
                           VerticalAlignment="Center">
-                        <Border Height="4" CornerRadius="2" Background="#33FFFFFF" VerticalAlignment="Center"/>
-                        <Border x:Name="ProgressFill" Height="4" CornerRadius="2" Width="0"
+                        <Border Height="3" CornerRadius="1.5" Background="#33FFFFFF" VerticalAlignment="Center"/>
+                        <Border x:Name="ProgressFill" Height="3" CornerRadius="1.5" Width="0"
                                 HorizontalAlignment="Left" VerticalAlignment="Center"
                                 Background="{DynamicResource AccentBrush}"/>
                     </Grid>
 
                     <Grid Grid.Row="4">
-                        <TextBlock x:Name="TimeCurrent" FontSize="10" Foreground="#99FFFFFF" HorizontalAlignment="Left"/>
-                        <TextBlock x:Name="TimeTotal" FontSize="10" Foreground="#99FFFFFF" HorizontalAlignment="Right"/>
+                        <TextBlock x:Name="TimeCurrent" FontSize="9" Foreground="#99FFFFFF" HorizontalAlignment="Left"/>
+                        <TextBlock x:Name="TimeTotal" FontSize="9" Foreground="#99FFFFFF" HorizontalAlignment="Right"/>
                     </Grid>
 
                     <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center">

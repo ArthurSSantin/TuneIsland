@@ -144,7 +144,7 @@ public class SettingsStoreTests
         var settings = SettingsStore.Deserialize("{}");
 
         Assert.Equal(IslandStyle.Attached, settings.Style);
-        Assert.Equal(380, settings.Width);
+        Assert.Equal(265, settings.Width);
         Assert.False(settings.HideWhenIdle);
     }
 }

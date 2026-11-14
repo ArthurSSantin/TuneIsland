@@ -17,7 +17,7 @@ public partial class IslandWindow : Window
     private const int CompactHeight = 21;
     private const int CompactWidth = 105;
     private const int IdleWidth = 67;
-    private const int ExpandedHeight = 150;
+    private const int ExpandedHeight = 105;
     private const double MaxCornerRadius = 26;
     private const double FloatingMargin = 10;
 

@@ -19,7 +19,7 @@
         <ComboBox x:Name="MonitorBox" Margin="0,0,0,12"/>
 
         <TextBlock x:Name="WidthLabel" Margin="0,0,0,4"/>
-        <Slider x:Name="WidthSlider" Minimum="240" Maximum="800" TickFrequency="10"
+        <Slider x:Name="WidthSlider" Minimum="180" Maximum="560" TickFrequency="10"
                 IsSnapToTickEnabled="True" ValueChanged="WidthSlider_ValueChanged" Margin="0,0,0,12"/>
 
         <TextBlock x:Name="ExpandLabel" Margin="0,0,0,4"/>

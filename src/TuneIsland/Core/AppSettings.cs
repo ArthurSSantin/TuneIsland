@@ -10,8 +10,8 @@ public enum IslandStyle
 
 public sealed class AppSettings
 {
-    public const int MinWidth = 240;
-    public const int MaxWidth = 800;
+    public const int MinWidth = 180;
+    public const int MaxWidth = 560;
     public const int MinAutoExpandSeconds = 1;
     public const int MaxAutoExpandSeconds = 10;
 
@@ -20,7 +20,7 @@ public sealed class AppSettings
     /// <summary>Índice do monitor (0 = primário, depois da esquerda para a direita).</summary>
     public int MonitorIndex { get; set; }
 
-    public int Width { get; set; } = 380;
+    public int Width { get; set; } = 265;
 
     public int AutoExpandSeconds { get; set; } = 3;
 

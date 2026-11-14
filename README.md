@@ -48,7 +48,7 @@ As configurações ficam em `%AppData%\TuneIsland\settings.json` e também podem
 |---|---|---|
 | `Style` | `Attached` | `Attached` (colada no topo) ou `Floating` (flutuante) |
 | `MonitorIndex` | `0` | Monitor onde a ilha aparece (0 = principal) |
-| `Width` | `380` | Largura expandida, de 240 a 800 px |
+| `Width` | `265` | Largura expandida, de 180 a 560 px |
 | `AutoExpandSeconds` | `3` | Tempo da auto-expansão ao trocar de faixa, de 1 a 10 s |
 | `StartWithWindows` | `false` | Inicia com o Windows (chave `HKCU\...\Run`) |
 | `HideWhenIdle` | `false` | Esconde quando nada estiver tocando (se `false`, mostra a ilha ociosa) |
