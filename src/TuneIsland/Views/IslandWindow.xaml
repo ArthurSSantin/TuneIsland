@@ -60,7 +60,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <Border x:Name="CompactArtFrame" Width="14" Height="14" CornerRadius="4"
+                <Border x:Name="CompactArtFrame" Width="14" Height="14" CornerRadius="4" VerticalAlignment="Center"
                         ClipToBounds="True" Background="#1F1F1F">
                     <Image x:Name="CompactArt" Stretch="UniformToFill"/>
                 </Border>
