@@ -16,7 +16,8 @@ public partial class IslandWindow : Window
 {
     private const int CompactHeight = 21;
     private const int CompactWidth = 105;
-    private const int IdleWidth = 67;
+    private const int IdleWidth = 92;
+    private const int IdleHeight = 26;
     private const int ExpandedHeight = 105;
     private const double MaxCornerRadius = 26;
     private const double FloatingMargin = 10;
@@ -390,7 +391,7 @@ public partial class IslandWindow : Window
     private void LayoutTo(bool animate, IEasingFunction? ease = null, int milliseconds = 300)
     {
         var width = TargetWidth();
-        var height = _expanded ? ExpandedHeight : CompactHeight;
+        var height = TargetHeight();
         var left = _centerX - width / 2.0;
 
         if (!animate)
@@ -419,6 +420,16 @@ public partial class IslandWindow : Window
         }
 
         return _snapshot is null ? IdleWidth : CompactWidth;
+    }
+
+    private double TargetHeight()
+    {
+        if (_expanded)
+        {
+            return ExpandedHeight;
+        }
+
+        return _snapshot is null ? IdleHeight : CompactHeight;
     }
 
     private void AnimateTo(DependencyProperty property, double to, int milliseconds, IEasingFunction easing)
