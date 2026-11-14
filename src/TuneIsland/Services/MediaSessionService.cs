@@ -81,7 +81,7 @@ public sealed class MediaSessionService : IDisposable
         await _gate.WaitAsync();
         try
         {
-            var chosen = PickPlayingSession(_manager);
+            var chosen = PickSession(_manager);
 
             // Assina TODAS as sessões: um app pausado precisa avisar quando voltar a tocar.
             DetachAll();
@@ -132,10 +132,12 @@ public sealed class MediaSessionService : IDisposable
 
     private async Task<MediaSnapshot?> BuildSnapshotAsync(GlobalSystemMediaTransportControlsSession? session)
     {
-        if (session is null || !IsPlaying(session))
+        if (session is null)
         {
             return null;
         }
+
+        var playing = IsPlaying(session);
 
         var properties = await session.TryGetMediaPropertiesAsync();
         var timeline = session.GetTimelineProperties();
@@ -167,7 +169,7 @@ public sealed class MediaSessionService : IDisposable
             appId,
             title,
             artist,
-            IsPlaying: true,
+            IsPlaying: playing,
             Position: position,
             Duration: duration,
             CapturedAtUtc: DateTimeOffset.UtcNow,
@@ -189,16 +191,22 @@ public sealed class MediaSessionService : IDisposable
         return buffer.ToArray();
     }
 
-    private static GlobalSystemMediaTransportControlsSession? PickPlayingSession(
+    /// <summary>
+    /// Prefere a sessão tocando. Sem nenhuma tocando, usa a sessão atual (pausada),
+    /// para a ilha continuar mostrando a última música.
+    /// </summary>
+    private static GlobalSystemMediaTransportControlsSession? PickSession(
         GlobalSystemMediaTransportControlsSessionManager manager)
     {
+        var sessions = manager.GetSessions();
+
         var current = manager.GetCurrentSession();
         if (current is not null && IsPlaying(current))
         {
             return current;
         }
 
-        foreach (var session in manager.GetSessions())
+        foreach (var session in sessions)
         {
             if (IsPlaying(session))
             {
@@ -206,7 +214,7 @@ public sealed class MediaSessionService : IDisposable
             }
         }
 
-        return null;
+        return current ?? (sessions.Count > 0 ? sessions[0] : null);
     }
 
     private static bool IsPlaying(GlobalSystemMediaTransportControlsSession session)
