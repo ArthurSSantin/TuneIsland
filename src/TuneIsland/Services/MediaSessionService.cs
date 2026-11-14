@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using TuneIsland.Core;
@@ -18,6 +19,7 @@ public sealed class MediaSessionService : IDisposable
 
     private GlobalSystemMediaTransportControlsSessionManager? _manager;
     private GlobalSystemMediaTransportControlsSession? _session;
+    private readonly List<GlobalSystemMediaTransportControlsSession> _watched = new();
     private string? _thumbnailKey;
     private byte[]? _thumbnail;
     private bool _disposed;
@@ -81,13 +83,18 @@ public sealed class MediaSessionService : IDisposable
         {
             var chosen = PickPlayingSession(_manager);
 
-            Detach();
+            // Assina TODAS as sessões: um app pausado precisa avisar quando voltar a tocar.
+            DetachAll();
+            foreach (var session in _manager.GetSessions())
+            {
+                Attach(session);
+            }
+
             lock (_sync)
             {
                 _session = chosen;
             }
 
-            Attach(chosen);
             await PublishLockedAsync();
         }
         catch (Exception ex)
@@ -215,34 +222,24 @@ public sealed class MediaSessionService : IDisposable
         }
     }
 
-    private void Attach(GlobalSystemMediaTransportControlsSession? session)
+    private void Attach(GlobalSystemMediaTransportControlsSession session)
     {
-        if (session is null)
-        {
-            return;
-        }
-
         session.MediaPropertiesChanged += OnMediaPropertiesChanged;
         session.TimelinePropertiesChanged += OnTimelinePropertiesChanged;
         session.PlaybackInfoChanged += OnPlaybackInfoChanged;
+        _watched.Add(session);
     }
 
-    private void Detach()
+    private void DetachAll()
     {
-        GlobalSystemMediaTransportControlsSession? previous;
-        lock (_sync)
+        foreach (var session in _watched)
         {
-            previous = _session;
+            session.MediaPropertiesChanged -= OnMediaPropertiesChanged;
+            session.TimelinePropertiesChanged -= OnTimelinePropertiesChanged;
+            session.PlaybackInfoChanged -= OnPlaybackInfoChanged;
         }
 
-        if (previous is null)
-        {
-            return;
-        }
-
-        previous.MediaPropertiesChanged -= OnMediaPropertiesChanged;
-        previous.TimelinePropertiesChanged -= OnTimelinePropertiesChanged;
-        previous.PlaybackInfoChanged -= OnPlaybackInfoChanged;
+        _watched.Clear();
     }
 
     private void OnMediaPropertiesChanged(GlobalSystemMediaTransportControlsSession sender,
@@ -262,7 +259,7 @@ public sealed class MediaSessionService : IDisposable
         }
 
         _disposed = true;
-        Detach();
+        DetachAll();
         lock (_sync)
         {
             _session = null;
