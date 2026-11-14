@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Test
+        run: |
+          dotnet test TuneIsland.sln -c Release
+
+      - name: Publish (win-x64, framework-dependent, single file)
+        run: |
+          dotnet publish src/TuneIsland/TuneIsland.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o publish
+
+      - name: Zip and checksum
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $zip = "TuneIsland-$tag-win-x64.zip"
+          Compress-Archive -Path "publish/*" -DestinationPath $zip
+          $hash = (Get-FileHash -Algorithm SHA256 $zip).Hash.ToLower()
+          "$hash  $zip" | Set-Content -Encoding ascii "SHA256SUMS-$tag.txt"
+
+      - name: Create or update GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ github.ref_name }}"
+          assets=("TuneIsland-$tag-win-x64.zip" "SHA256SUMS-$tag.txt")
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "${assets[@]}" --clobber
+          else
+            gh release create "$tag" "${assets[@]}" --title "TuneIsland $tag" --generate-notes
+          fi
