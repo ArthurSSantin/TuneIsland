@@ -19,9 +19,16 @@ public partial class IslandWindow : Window
     private const int IdleWidth = 105;
     private const int IdleHeight = 30;
     private const int ExpandedHeight = 105;
+    // A janela tem tamanho fixo (cabe o estado expandido com a largura máxima). Só o contorno da ilha anima dentro dela:
+    // redimensionar a janela transparente (layered) a cada frame é o que travava a animação.
+    private const int WindowWidth = AppSettings.MaxWidth;
+    private const int WindowHeight = ExpandedHeight;
     private const double MaxCornerRadius = 26;
     private const double FloatingMargin = 10;
     private const int AccentAnimationMs = 450;
+    // Ilha "invisível" (tocando ou ociosa): quase transparente, mas ainda recebe o mouse para poder expandir no hover.
+    private const double HiddenOpacity = 0.01;
+    private const int PresenceAnimationMs = 200;
     private static readonly TimeSpan ProgressInterval = TimeSpan.FromMilliseconds(500);
 
     private readonly MediaSessionService _media;
@@ -30,9 +37,9 @@ public partial class IslandWindow : Window
     private readonly Border[] _bars;
     private readonly int[] _barDurationsMs = { 420, 560, 360 };
 
+    private readonly DispatcherTimer _autoExpandTimer;
     private readonly DispatcherTimer _enterTimer;
     private readonly DispatcherTimer _leaveTimer;
-    private readonly DispatcherTimer _autoExpandTimer;
     private readonly DispatcherTimer _progressTimer;
     private readonly DispatcherTimer _fullscreenTimer;
 
@@ -49,6 +56,8 @@ public partial class IslandWindow : Window
     private double _centerX;
     private double _appliedCornerRadius = -1;
     private IslandStyle? _appliedCornerStyle;
+    private double? _presenceTarget;
+    private bool _wasPlaying;
 
     public IslandWindow(AppSettings settings, MediaSessionService media)
     {
@@ -111,7 +120,7 @@ public partial class IslandWindow : Window
 
         SourceInitialized += (_, _) => ApplyWindowStyles();
         // O raio depende só da altura, então mudanças apenas de largura não precisam reaplicar.
-        SizeChanged += (_, e) =>
+        Island.SizeChanged += (_, e) =>
         {
             if (e.HeightChanged)
             {
@@ -123,6 +132,7 @@ public partial class IslandWindow : Window
             ApplyCorners();
             Reposition();
             ApplyFullscreenWatcher();
+            UpdatePresence(animate: false);
             UpdateVisibility();
         };
         Closed += (_, _) =>
@@ -158,6 +168,10 @@ public partial class IslandWindow : Window
         Top = display.Top / display.DpiScale +
               (_settings.Style == IslandStyle.Floating ? FloatingMargin : 0);
 
+        Width = WindowWidth;
+        Height = WindowHeight;
+        Left = _centerX - WindowWidth / 2.0;
+
         LayoutTo(animate: false);
     }
 
@@ -179,7 +193,7 @@ public partial class IslandWindow : Window
     /// <summary>Raio acompanha a altura atual (metade da altura, até um máximo), então muda suavemente durante a animação.</summary>
     private void ApplyCorners()
     {
-        var height = ActualHeight > 0 ? ActualHeight : Height;
+        var height = Island.ActualHeight > 0 ? Island.ActualHeight : Island.Height;
         var radius = Math.Min(height / 2.0, MaxCornerRadius);
         if (radius == _appliedCornerRadius && _settings.Style == _appliedCornerStyle)
         {
@@ -225,9 +239,9 @@ public partial class IslandWindow : Window
 
     private void UpdateVisibility()
     {
-        var hideForIdle = _snapshot is null && _settings.HideWhenIdle;
+        // A janela só some em tela cheia. Idle e "tocando" são tratados por UpdatePresence, para o hover continuar funcionando.
         var hideForFullscreen = _fullscreenHidden && _settings.HideInFullscreen;
-        var shouldShow = !hideForIdle && !hideForFullscreen;
+        var shouldShow = !hideForFullscreen;
 
         if (shouldShow && !IsVisible)
         {
@@ -237,6 +251,32 @@ public partial class IslandWindow : Window
         {
             Hide();
         }
+
+        UpdatePresence();
+    }
+
+    /// <summary>
+    /// Visível só quando expandida (hover ou janela de auto-expansão ao dar play). Fechada, fica quase invisível mas continua recebendo o mouse.
+    /// </summary>
+    private void UpdatePresence(bool animate = true)
+    {
+        var showIsland = _hovered || _expanded;
+        var target = showIsland ? 1.0 : HiddenOpacity;
+
+        if (target == _presenceTarget)
+        {
+            return;
+        }
+
+        _presenceTarget = target;
+        if (animate)
+        {
+            AnimateOpacity(Island, target, PresenceAnimationMs);
+            return;
+        }
+
+        Island.BeginAnimation(OpacityProperty, null);
+        Island.Opacity = target;
     }
 
     private void OnSnapshot(MediaSnapshot? snapshot)
@@ -246,6 +286,7 @@ public partial class IslandWindow : Window
         if (snapshot is null)
         {
             _trackKey = null;
+            _wasPlaying = false;
             _autoExpandTimer.Stop();
             _progressTimer.Stop();
             SetEqualizer(false);
@@ -271,6 +312,21 @@ public partial class IslandWindow : Window
         {
             _trackKey = snapshot.TrackKey;
             ApplyArtwork(snapshot.Thumbnail);
+        }
+
+        // Dar play (inclusive após pausar e despausar) abre a ilha por alguns segundos. Pausar esconde.
+        var startedPlaying = snapshot.IsPlaying && !_wasPlaying;
+        _wasPlaying = snapshot.IsPlaying;
+        if (!snapshot.IsPlaying)
+        {
+            _autoExpandTimer.Stop();
+            if (!_hovered)
+            {
+                Collapse();
+            }
+        }
+        else if (startedPlaying)
+        {
             StartAutoExpand();
         }
 
@@ -421,6 +477,7 @@ public partial class IslandWindow : Window
         }
 
         _expanded = true;
+        UpdatePresence();
         if (_snapshot is null)
         {
             ShowIdleContent();
@@ -444,6 +501,7 @@ public partial class IslandWindow : Window
         }
 
         _expanded = false;
+        UpdatePresence();
         _progressTimer.Stop();
         StopMarquee();
 
@@ -463,24 +521,20 @@ public partial class IslandWindow : Window
     {
         var width = TargetWidth();
         var height = TargetHeight();
-        var left = _centerX - width / 2.0;
 
         if (!animate)
         {
-            BeginAnimation(WidthProperty, null);
-            BeginAnimation(HeightProperty, null);
-            BeginAnimation(LeftProperty, null);
-            Width = width;
-            Height = height;
-            Left = left;
+            Island.BeginAnimation(WidthProperty, null);
+            Island.BeginAnimation(HeightProperty, null);
+            Island.Width = width;
+            Island.Height = height;
             return;
         }
 
-        // Largura e posição usam a mesma curva e duração, então o centro fica fixo durante a animação.
+        // Largura e altura usam a mesma curva e duração. O centro não se move porque a ilha é centralizada na janela.
         var easing = ease ?? _expandEase;
-        AnimateTo(WidthProperty, width, milliseconds, easing);
-        AnimateTo(HeightProperty, height, milliseconds, easing);
-        AnimateTo(LeftProperty, left, milliseconds, easing);
+        AnimateTo(Island, WidthProperty, width, milliseconds, easing);
+        AnimateTo(Island, HeightProperty, height, milliseconds, easing);
     }
 
     private double TargetWidth()
@@ -503,9 +557,9 @@ public partial class IslandWindow : Window
         return _snapshot is null ? IdleHeight : CompactHeight;
     }
 
-    private void AnimateTo(DependencyProperty property, double to, int milliseconds, IEasingFunction easing)
+    private static void AnimateTo(FrameworkElement target, DependencyProperty property, double to, int milliseconds, IEasingFunction easing)
     {
-        var from = (double)GetValue(property);
+        var from = (double)target.GetValue(property);
         var animation = new DoubleAnimation(from, to, TimeSpan.FromMilliseconds(milliseconds))
         {
             EasingFunction = easing
@@ -513,11 +567,11 @@ public partial class IslandWindow : Window
 
         animation.Completed += (_, _) =>
         {
-            BeginAnimation(property, null);
-            SetValue(property, to);
+            target.BeginAnimation(property, null);
+            target.SetValue(property, to);
         };
 
-        BeginAnimation(property, animation);
+        target.BeginAnimation(property, animation);
     }
 
     private static void AnimateOpacity(UIElement element, double to, int milliseconds, Action? onCompleted = null)

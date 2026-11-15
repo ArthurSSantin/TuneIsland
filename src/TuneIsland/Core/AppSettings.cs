@@ -22,7 +22,7 @@ public sealed class AppSettings
 
     public int Width { get; set; } = 265;
 
-    public int AutoExpandSeconds { get; set; } = 3;
+    public int AutoExpandSeconds { get; set; } = 5;
 
     public bool StartWithWindows { get; set; }
 
