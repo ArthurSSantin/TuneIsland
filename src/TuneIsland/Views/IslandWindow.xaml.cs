@@ -21,6 +21,8 @@ public partial class IslandWindow : Window
     private const int ExpandedHeight = 105;
     private const double MaxCornerRadius = 26;
     private const double FloatingMargin = 10;
+    private const int AccentAnimationMs = 450;
+    private static readonly TimeSpan ProgressInterval = TimeSpan.FromMilliseconds(500);
 
     private readonly MediaSessionService _media;
     private readonly SolidColorBrush _accent;
@@ -45,6 +47,8 @@ public partial class IslandWindow : Window
     private bool _fullscreenHidden;
     private bool _equalizerRunning;
     private double _centerX;
+    private double _appliedCornerRadius = -1;
+    private IslandStyle? _appliedCornerStyle;
 
     public IslandWindow(AppSettings settings, MediaSessionService media)
     {
@@ -96,8 +100,8 @@ public partial class IslandWindow : Window
             }
         };
 
-        _progressTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
-        _progressTimer.Tick += (_, _) => UpdateProgress();
+        _progressTimer = new DispatcherTimer { Interval = ProgressInterval };
+        _progressTimer.Tick += (_, _) => UpdateProgress(animate: true);
 
         _fullscreenTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _fullscreenTimer.Tick += (_, _) => CheckFullscreen();
@@ -106,7 +110,14 @@ public partial class IslandWindow : Window
             Dispatcher.BeginInvoke(new Action(() => OnSnapshot(snapshot)));
 
         SourceInitialized += (_, _) => ApplyWindowStyles();
-        SizeChanged += (_, _) => ApplyCorners();
+        // O raio depende só da altura, então mudanças apenas de largura não precisam reaplicar.
+        SizeChanged += (_, e) =>
+        {
+            if (e.HeightChanged)
+            {
+                ApplyCorners();
+            }
+        };
         Loaded += (_, _) =>
         {
             ApplyCorners();
@@ -170,6 +181,13 @@ public partial class IslandWindow : Window
     {
         var height = ActualHeight > 0 ? ActualHeight : Height;
         var radius = Math.Min(height / 2.0, MaxCornerRadius);
+        if (radius == _appliedCornerRadius && _settings.Style == _appliedCornerStyle)
+        {
+            return;
+        }
+
+        _appliedCornerRadius = radius;
+        _appliedCornerStyle = _settings.Style;
         Island.CornerRadius = _settings.Style == IslandStyle.Attached
             ? new CornerRadius(0, 0, radius, radius)
             : new CornerRadius(radius);
@@ -304,9 +322,11 @@ public partial class IslandWindow : Window
     private void SetAccent(RgbColor color)
     {
         var target = ToColor(color);
-        _accent.BeginAnimation(SolidColorBrush.ColorProperty,
-            new ColorAnimation(target, TimeSpan.FromMilliseconds(450)));
-        _glow.Color = target;
+        var duration = TimeSpan.FromMilliseconds(AccentAnimationMs);
+
+        // Brilho e destaque animam juntos, com a mesma duração e curva.
+        _accent.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(target, duration));
+        _glow.BeginAnimation(DropShadowEffect.ColorProperty, new ColorAnimation(target, duration));
     }
 
     private void SetEqualizer(bool running)
@@ -341,26 +361,48 @@ public partial class IslandWindow : Window
         }
     }
 
-    private void UpdateProgress()
+    /// <param name="animate">
+    /// Quando true (tick do timer), a barra desliza até a posição estimada no fim do intervalo,
+    /// para o movimento ser contínuo. Quando false (seek, troca de faixa, idle), pula direto.
+    /// </param>
+    private void UpdateProgress(bool animate = false)
     {
         if (_snapshot is null)
         {
-            ProgressFill.Width = 0;
+            SetProgressRatio(0, animate: false);
             TimeCurrent.Text = string.Empty;
             TimeTotal.Text = string.Empty;
             return;
         }
 
-        var position = _snapshot.EstimatePosition(DateTimeOffset.UtcNow);
+        var now = DateTimeOffset.UtcNow;
+        var position = _snapshot.EstimatePosition(now);
         var duration = _snapshot.Duration;
 
-        var ratio = duration > TimeSpan.Zero
+        var targetPosition = animate ? _snapshot.EstimatePosition(now + ProgressInterval) : position;
+        SetProgressRatio(RatioFor(targetPosition, duration), animate);
+
+        TimeCurrent.Text = TimeFormatter.Format(position);
+        TimeTotal.Text = duration > TimeSpan.Zero ? TimeFormatter.Format(duration) : "--:--";
+    }
+
+    private static double RatioFor(TimeSpan position, TimeSpan duration) =>
+        duration > TimeSpan.Zero
             ? Math.Clamp(position.TotalSeconds / duration.TotalSeconds, 0, 1)
             : 0;
 
-        ProgressFill.Width = ProgressHit.ActualWidth * ratio;
-        TimeCurrent.Text = TimeFormatter.Format(position);
-        TimeTotal.Text = duration > TimeSpan.Zero ? TimeFormatter.Format(duration) : "--:--";
+    private void SetProgressRatio(double ratio, bool animate)
+    {
+        if (animate)
+        {
+            // Sem "From", a animação parte do valor atual (handoff), então não há salto entre ticks.
+            ProgressFillScale.BeginAnimation(ScaleTransform.ScaleXProperty,
+                new DoubleAnimation(ratio, ProgressInterval));
+            return;
+        }
+
+        ProgressFillScale.BeginAnimation(ScaleTransform.ScaleXProperty, null);
+        ProgressFillScale.ScaleX = ratio;
     }
 
     private void StartAutoExpand()
@@ -562,8 +604,6 @@ public partial class IslandWindow : Window
         _ = _media.SeekAsync(target);
         e.Handled = true;
     }
-
-    private void ProgressHit_SizeChanged(object sender, SizeChangedEventArgs e) => UpdateProgress();
 
     private void Prev_Click(object sender, RoutedEventArgs e) => _ = _media.PreviousAsync();
 

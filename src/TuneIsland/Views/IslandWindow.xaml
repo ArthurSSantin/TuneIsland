@@ -117,12 +117,17 @@
 
                     <Grid x:Name="ProgressHit" Grid.Row="3" Background="Transparent" Cursor="Hand"
                           MouseLeftButtonDown="Progress_MouseLeftButtonDown"
-                          SizeChanged="ProgressHit_SizeChanged"
                           VerticalAlignment="Center">
                         <Border Height="3" CornerRadius="1.5" Background="#33FFFFFF" VerticalAlignment="Center"/>
-                        <Border x:Name="ProgressFill" Height="3" CornerRadius="1.5" Width="0"
+                        <Border x:Name="ProgressFill" Height="3" CornerRadius="1.5"
+                                Width="{Binding ActualWidth, ElementName=ProgressHit}"
                                 HorizontalAlignment="Left" VerticalAlignment="Center"
-                                Background="{DynamicResource AccentBrush}"/>
+                                RenderTransformOrigin="0,0.5"
+                                Background="{DynamicResource AccentBrush}">
+                            <Border.RenderTransform>
+                                <ScaleTransform x:Name="ProgressFillScale" ScaleX="0"/>
+                            </Border.RenderTransform>
+                        </Border>
                     </Grid>
 
                     <Grid Grid.Row="4">
